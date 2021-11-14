@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Text, TextInput, ImageBackground, Image, TouchableHighlight} from 'react-native';
+import { StyleSheet, View, Text, TextInput, ImageBackground, Image, TouchableHighlight, KeyboardAvoidingView} from 'react-native';
 import { useState } from 'react/cjs/react.development';
 
 export default function HomeScreen(props){
@@ -52,7 +52,9 @@ export default function HomeScreen(props){
                 onChangeText={(text) => onNameUpdate(text)}
                 value={name}
                 placeholder='Your Name'  
-              />            
+              />      
+              {/* avoid keyboard on android devices */}
+              { Platform.OS === 'android' ? <KeyboardAvoidingView behavior="height" /> : null }      
             </View> 
             <Text style={styles.errorText}>{error}</Text> 
           </View> 
@@ -120,7 +122,7 @@ export default function HomeScreen(props){
               </TouchableHighlight>
           </View>  
         </View>      
-        <View style={{flex: 6}}></View>       
+        <View style={{flex: 12}}></View>       
       </ImageBackground> 
     </View>
   );  
@@ -137,7 +139,7 @@ const styles = StyleSheet.create({
     alignItems: 'center' 
   },
   titleContainer: {
-    flex: 50,
+    flex: 44,
     flexDirection: 'column',   
     alignContent: 'center',
     alignItems: 'center'
