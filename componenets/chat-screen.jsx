@@ -1,11 +1,14 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View, Text, Platform, KeyboardAvoidingView } from 'react-native';
+import { GiftedChat, Bubble } from 'react-native-gifted-chat'
+
 
 export default function ChatScreen(props){
 
   const [name, setName] = useState('');
   const [color, setColor] = useState('');
+  const [messages, setMessages] = useState([]);  
 
   //on mount, setup navigation options and store name in state
   useEffect(()=>{    
@@ -14,19 +17,64 @@ export default function ChatScreen(props){
     props.navigation.setOptions({ title: nameProp });
     setName(nameProp);
     setColor(colorProp);
-  }, [])  
 
-  return (
-    <View style={{backgroundColor: color}}>
-      <Text style={styles.titleText}>Welcome to the chat, {name}.</Text>
+    //add messages
+    setMessages([
+      {
+        _id: 1,
+        text: nameProp + ' has entered the chat!',
+        createdAt: new Date(),
+        system: true,
+      },
+      {
+        _id: 2,
+        text: 'Welcome, ' + nameProp,
+        createdAt: new Date(),
+        user: {
+          _id: 2,
+          name: 'React Native',
+          avatar: 'https://placeimg.com/140/140/any',
+        },
+      }
+    ]);
+  }, [])   
+
+  const onSend = (newMessages = []) => {    
+    setMessages(GiftedChat.append(messages, newMessages));
+  }
+
+  const renderBubble = (props) =>{
+    return (
+      <Bubble
+        {...props}
+        wrapperStyle={{
+          right: {
+            backgroundColor: color
+          }
+        }}
+      />
+    )
+  }
+
+  return (    
+    <View style={[{backgroundColor: 'white'}, styles.container]}>
+      <GiftedChat
+        renderBubble={renderBubble.bind(this)}
+        messages={messages}
+        onSend={messages => onSend(messages)}
+        user={{
+          _id: 1,
+        }}
+      />
+
+      {/* avoid keyboard on android devices */}
+      { Platform.OS === 'android' ? <KeyboardAvoidingView behavior="height" /> : null }
     </View>
   );
 }
 
 const styles = StyleSheet.create({  
-  titleText:{
-    fontSize: 40,
-    margin: 50,
-    color: 'white'
-  }
+  container:{
+    flex: 1
+  },
 });

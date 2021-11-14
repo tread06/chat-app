@@ -45,6 +45,9 @@ export default function HomeScreen(props){
                 source={require('../assets/nameIconAsPNG.png')}
               />
               <TextInput    
+                accessible={true}
+                accessibilityLabel="Name input"
+                accessibilityHint="Enter your name."                
                 style={styles.nameInput}          
                 onChangeText={(text) => onNameUpdate(text)}
                 value={name}
@@ -58,6 +61,10 @@ export default function HomeScreen(props){
             <Text style={{color: 'gray'}}>Choose Background Color</Text> 
             <View style={styles.colorButtonContainer}>
               <TouchableHighlight
+                  accessible={true}
+                  accessibilityLabel="Color select 1"
+                  accessibilityHint="Selects color 1."
+                  accessibilityRole="button"
                   onPress={() => {onColorUpdate(0);}}  
                   style={ color === 0 ? styles.colorButtonSelected : styles.colorButton} 
                   underlayColor="#090C08"                     
@@ -65,6 +72,10 @@ export default function HomeScreen(props){
                   <View style={[styles.color0, styles.colorButtonChild]} ></View>                 
                 </TouchableHighlight>
                 <TouchableHighlight
+                  accessible={true}
+                  accessibilityLabel="Color select 2"
+                  accessibilityHint="Selects color 2."
+                  accessibilityRole="button"
                   onPress={() => {onColorUpdate(1);}} 
                   style={ color === 1 ? styles.colorButtonSelected : styles.colorButton}   
                   underlayColor="#474056"                   
@@ -72,6 +83,10 @@ export default function HomeScreen(props){
                   <View style={[styles.color1, styles.colorButtonChild]}></View>                 
                 </TouchableHighlight>
                 <TouchableHighlight
+                  accessible={true}
+                  accessibilityLabel="Color select 3"
+                  accessibilityHint="Selects color 3."
+                  accessibilityRole="button"
                   onPress={() => {onColorUpdate(2);}} 
                   style={ color === 2 ? styles.colorButtonSelected : styles.colorButton}    
                   underlayColor="#8A95A5"                  
@@ -79,6 +94,10 @@ export default function HomeScreen(props){
                   <View style={[styles.color2, styles.colorButtonChild]}></View>                 
                 </TouchableHighlight>
                 <TouchableHighlight
+                  accessible={true}
+                  accessibilityLabel="Color select 4"
+                  accessibilityHint="Selects color 4."
+                  accessibilityRole="button"
                   onPress={() => {onColorUpdate(3);}} 
                   style={ color === 3 ? styles.colorButtonSelected : styles.colorButton}    
                   underlayColor="#B9C6AE"               
@@ -90,6 +109,10 @@ export default function HomeScreen(props){
 
           <View style={styles.inputContent}> 
               <TouchableHighlight
+                accessible={true}
+                accessibilityLabel="Enter chat button"
+                accessibilityHint="Enters the chat."
+                accessibilityRole="button"
                 onPress={() => {onEnterChat({name: name});}} 
                 style={styles.button}                 
                 > 
