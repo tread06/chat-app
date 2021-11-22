@@ -5,6 +5,8 @@ import { GiftedChat, Bubble } from 'react-native-gifted-chat'
 import { db, auth} from '../firebase-config';
 import { signInAnonymously, onAuthStateChanged} from 'firebase/auth';
 import { collection, onSnapshot, doc, query, setDoc } from 'firebase/firestore';
+import NetInfo from "@react-native-community/netinfo";
+import { storeLocalUserData, storeLocalMessageData, getLocalMessageData, getLocalUserData, deleteLocalMessages, deleteLocalUser } from '../localStorage';
 
 export default function ChatScreen(props){
 
@@ -12,6 +14,7 @@ export default function ChatScreen(props){
   const [color, setColor] = useState('');
   const [messages, setMessages] = useState([]);    
   const [user, setUser] = useState(""); 
+  const [online, setOnline] = useState(false);  
 
   //on mount, setup navigation options and store name in state
   useEffect(()=>{    
@@ -22,43 +25,80 @@ export default function ChatScreen(props){
     setName(nameProp);
     setColor(colorProp);
 
-    let messagesUnsubscribe = () => {};
+    //try to get locally stored user --- update user state  
+    getLocalUserData()
+    .then(userId => {
+      if(userId !== null){        
+        setUser(userId);
+      }
+    })    
+    .catch(error =>{
+      console.log(error);
+    })
 
-    if(user === ""){
-      //if no user is signed in, sign in anonymously
-      const signIn = async () =>{        
-        try{
-          await signInAnonymously(auth);          
-        }
-        catch (error) {
-          console.log(error);
-        }
-      }      
-      signIn();
+    //try to get locally stored messages --- update messages state
+    getLocalMessageData()
+    .then(messages => {
+      if(messages !== null){        
+        setMessages(messages);
+      }
+    })    
+    .catch(error =>{
+      console.log(error);
+    }) 
 
-      const q = query(collection(db, "messages"));
-      messagesUnsubscribe = onSnapshot(q, (OnMessagesUpdated));
-    }
+    //subscribe to network status updates
+    const networkStatusUnsubscribe = NetInfo.addEventListener(state => {
+      // console.log("Connection type", state.type);
+      // console.log("Is connected?", state.isConnected);
+      setOnline(state.isConnected);
+
+      let messagesUnsubscribe = () => {}; 
+      
+      //if online, subscribe to database updates and authenticate user if there is no user data
+      if(state.isConnected){     
+          if(user === ""){
+            //if no user is signed in, sign in anonymously
+            const signIn = async () =>{        
+              try{
+                await signInAnonymously(auth);          
+              }
+              catch (error) {
+                console.log(error);
+              }
+            }      
+            signIn();
+          }
+
+          //subscribe to message database snapshots
+          const q = query(collection(db, "messages"));
+          messagesUnsubscribe = onSnapshot(q, (OnMessagesUpdated));
+      }
+    }); 
 
     return () => {      
-      messagesUnsubscribe();
+      //clean up subscriptions
+      messagesUnsubscribe();      
+      networkStatusUnsubscribe();
     }
   }, [])   
 
+  //called automatically when auth status changes
   onAuthStateChanged(auth, (newUser) => {
     if (newUser) {
       // User is signed in, see docs for a list of available properties
       // https://firebase.google.com/docs/reference/js/firebase.User          
       setUser(newUser.uid);   
+      storeLocalUserData(newUser.uid);
     } else {
       // User is signed out  
       setUser("");
+      storeLocalUserData("");
     }
   });
 
   function onSend(newMessages = []){ 
-
-    //add message to database
+    //add message to database - should only be called while online
     newMessages.forEach((message) => {            
       setDoc(doc(db, "messages", message._id), {
         _id: message._id,
@@ -73,8 +113,9 @@ export default function ChatScreen(props){
   }
 
   function OnMessagesUpdated(snapshot){
-
-    //update messages state
+    //update messages state and store locally
+    //only called if subscribed to database snapshots - online only 
+    console.log("Messages updated");
     const newMessages = [];    
     snapshot.forEach((doc) => {      
       let data = doc.data();         
@@ -90,7 +131,10 @@ export default function ChatScreen(props){
     newMessages.sort(function (a, b) {
       return b.createdAt - a.createdAt;
     });
+
+    //update messages state and update local messages
     setMessages(newMessages);
+    storeLocalMessageData(JSON.stringify(newMessages));
   }
 
   const renderBubble = (props) =>{
