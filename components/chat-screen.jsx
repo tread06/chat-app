@@ -13,8 +13,7 @@ export default function ChatScreen(props){
   const [name, setName] = useState('');
   const [color, setColor] = useState('');
   const [messages, setMessages] = useState([]);    
-  const [user, setUser] = useState(""); 
-  const [online, setOnline] = useState(false);  
+  const [user, setUser] = useState("");
 
   //on mount, setup navigation options and store name in state
   useEffect(()=>{    
@@ -48,12 +47,11 @@ export default function ChatScreen(props){
     }) 
 
     //subscribe to network status updates
+    let messagesUnsubscribe = () => {}; 
     const networkStatusUnsubscribe = NetInfo.addEventListener(state => {
       // console.log("Connection type", state.type);
       // console.log("Is connected?", state.isConnected);
-      setOnline(state.isConnected);
-
-      let messagesUnsubscribe = () => {}; 
+      //setOnline(state.isConnected);      
       
       //if online, subscribe to database updates and authenticate user if there is no user data
       if(state.isConnected){     
@@ -114,8 +112,7 @@ export default function ChatScreen(props){
 
   function OnMessagesUpdated(snapshot){
     //update messages state and store locally
-    //only called if subscribed to database snapshots - online only 
-    console.log("Messages updated");
+    //only called if subscribed to database snapshots - online only     
     const newMessages = [];    
     snapshot.forEach((doc) => {      
       let data = doc.data();         
@@ -157,8 +154,7 @@ export default function ChatScreen(props){
 
   return (    
     <View style={[{backgroundColor: color}, styles.container]}>
-      <GiftedChat
-        // loadEarlier={true}
+      <GiftedChat        
         renderBubble={renderBubble.bind(this)}
         messages={messages}
         onSend={messages => onSend(messages)}
