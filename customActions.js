@@ -63,7 +63,7 @@ export default class CustomActions extends React.Component {
           (error) => console.log(error)
         );
         if (result) {
-          this.props.onSend({
+          this.props.onSendLocation({
             location: {
               longitude: result.coords.longitude,
               latitude: result.coords.latitude,
@@ -99,41 +99,6 @@ export default class CustomActions extends React.Component {
       }
     });
   };
-
-  //to do: select image function
-  //to do: upload image function
-  //used to get local user id
-
-  // uploadImage = async (uri) => {
-  //   return new Promise(async (resolve, reject) => {
-  //     try {
-
-  //       //convert uri to blob
-  //       this.loadXHR(uri)
-  //       .then((blob) => {
-  //         const storage = getStorage();
-  //         const storageRef = ref(storage, 'testFileName');
-
-  //         //upload
-  //         uploadBytes(storageRef, blob).then((snapshot) => {
-  //           getDownloadURL(snapshot.ref).then((url) => {
-  //             console.log('Upload success. File available at: ' + url);
-
-  //             //to do: no not call onSend. Instead set the state
-  //             this.props.onImageUploaded({ image: url });
-  //             return resolve(url);
-  //           });
-  //         });
-  //       })
-  //       .catch((e) => {
-  //         return reject(e);
-  //       });
-
-  //     } catch (e) {
-  //       return reject(e);
-  //     }
-  //   });
-  // };
 
   onActionPress = () => {
     const options = [
@@ -207,4 +172,5 @@ const styles = StyleSheet.create({
 CustomActions.contextTypes = {
   actionSheet: PropTypes.func,
   onImageUploaded: PropTypes.func,
+  onSendLocation: PropTypes.func,
 };

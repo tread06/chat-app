@@ -12,6 +12,7 @@ import KeyboardAvoider from './keyboard-avoider';
 import { uploadImage } from '../imageUploader';
 import { nanoid } from 'nanoid/non-secure';
 import { Timestamp } from '@firebase/firestore';
+import MapView from 'react-native-maps';
 
 export default function ChatScreen(props){
 
@@ -22,7 +23,7 @@ export default function ChatScreen(props){
   const [isSending, setIsSending] = useState(false);
   const [selectedImage, setselectedImage] = useState(""); //path to image file that will be sent 
 
-  //on mount, setup navigation options and store name in state
+  // called on mount, sets navigation options and stores name in state
   useEffect(()=>{    
     const nameProp = props.route.params.name;
     const colorProp = props.route.params.color;
@@ -83,8 +84,7 @@ export default function ChatScreen(props){
       networkStatusUnsubscribe();
     }
   }, [])   
-
-  //called automatically when auth status changes
+  // called when auth status changes, updates user state
   onAuthStateChanged(auth, (newUser) => {
     if (newUser) {
       // User is signed in, see docs for a list of available properties
@@ -97,7 +97,8 @@ export default function ChatScreen(props){
       storeLocalUserData("");
     }
   }); 
-  function OnMessagesUpdated(snapshot){
+
+  const OnMessagesUpdated =(snapshot) =>{
     //update messages state and store locally
     //only called if subscribed to database snapshots - online only     
     const newMessages = [];    
@@ -108,7 +109,8 @@ export default function ChatScreen(props){
         text: data.text,
         createdAt: data.createdAt.toDate(),
         user: data.user,
-        image: data.image
+        image: data.image,
+        location: (data.location) ? data.location : null
       });
     });
 
@@ -190,14 +192,16 @@ export default function ChatScreen(props){
             borderBottomLeftRadius: 10,
             borderTopRightRadius: 10,
             borderTopLeftRadius: 10,
-            backgroundColor: '#ab3113',
+            backgroundColor: '#5d8599',
+            overflow: 'hidden'  
           },
           left: {                  
             marginBottom: 15,
             borderBottomRightRadius: 10,
             borderBottomLeftRadius: 10,
             borderTopRightRadius: 10,
-            borderTopLeftRadius: 10,                
+            borderTopLeftRadius: 10, 
+            overflow: 'hidden'                 
           }
         }}
       />
@@ -208,50 +212,62 @@ export default function ChatScreen(props){
       <MessageImage
         {...props}
         imageStyle={{
-          width: 200,
-          height: 200,
-          resizeMode: 'cover'
+          margin:0,
+          width: 275,
+          height: 275,
+          resizeMode: 'cover',
+          borderBottomRightRadius: 0,
+          borderBottomLeftRadius: 0,
+          borderTopRightRadius: 10,
+          borderTopLeftRadius: 10,
         }}
       />
     )
   };
-  const renderCustomActions = (props) =>{
-    return <CustomActions {...props} onSelectImage = {selectImage}/>;
+  const sendLocation = (location) =>{    
+
+    const id = user + name + nanoid();  
+    setDoc(doc(db, "messages", id), {
+      _id: id,
+      text: "",
+      createdAt: Timestamp.now(),
+      image: "",
+      location: {
+        longitude: location.location.longitude, 
+        latitude: location.location.latitude
+      },
+      user: {
+        _id: user,
+        name: name
+      }
+    }); 
+
   };
-  //allow sendng with various types of data - text, image, etc
-  const customSendPress = (text, onSend) => {
-
-    console.log("Custom send");
-    console.log("image: "+ selectedImage);
-    console.log("text: "+ text);
-
-    if (selectedImage === "" && text && onSend) {
-      console.log("Text only");      
+  const renderCustomActions = (props) =>{
+    return <CustomActions {...props} onSelectImage = {selectImage} onSendLocation = {sendLocation}/>;
+  };  
+  const customSendPress = (location, text, onSend) => {
+    if (selectedImage === "" && text && onSend) {           
       onCustomSend({text: text.trim(), image: ""}, true);
-    } else if (selectedImage !== "" && !text && onSend) {
-      console.log("Image only");
+    } else if (selectedImage !== "" && !text && onSend) {      
       onCustomSend({text: "" , image: selectedImage}, true);
-    } else if (selectedImage !== "" && text && onSend) {
-      console.log("Image and text");
+    } else if (selectedImage !== "" && text && onSend) {      
       onCustomSend({text: text.trim(), image: selectedImage}, true);
-    } else{
-      console.log("No conditions met");
+    } else{      
       return false;
     }    
   };
-  onCustomSend = (message) =>{    
-    const id = user + name + nanoid(); 
+  const onCustomSend = (message) =>{    
+    const id = user + name + nanoid();     
 
-    //to do: reset gifted chat text... good luck
-    console.log("image in message: "+message.image);
+    //to do: reset gifted chat text
     setIsSending(true);
 
     if(message.image !== ""){
       //send with image 
       console.log("Image found");
       uploadImage(message.image, user)
-        .then(url => {
-          console.log("Image upload complete, creating message...");
+        .then(url => {          
           setDoc(doc(db, "messages", id), {
             _id: id,
             text: message.text,
@@ -261,8 +277,7 @@ export default function ChatScreen(props){
               _id: user,
               name: name
             }
-          });
-          console.log("DONE");
+          });          
           setselectedImage("");
           setIsSending(false); 
         })    
@@ -285,23 +300,46 @@ export default function ChatScreen(props){
         }); 
         setIsSending(false); 
       }       
-  };
-  const customSend = ({onSend, text, sendButtonProps, ...sendProps}) => { 
+  };  
+  const customSend = ({onSend, text, location, sendButtonProps, ...sendProps}) => { 
     return ( <Send 
       {...sendProps} 
       textStyle={styles.sendButton}      
       sendButtonProps={{ 
         ...sendButtonProps,         
-        onPress: () => customSendPress(text, onSend), }} /> 
+        onPress: () => customSendPress(location, text, onSend), }} /> 
     );
+  };
+  const CustomView =(props) => {    
+    const { currentMessage} = props;   
+    //if the is a location, render it. Otherwise, return null -- default behavior  
+    if (currentMessage.location) {      
+      return (
+          <MapView
+            style={{width: 275,
+              height: 275,
+              borderRadius: 10,
+              margin: 0,     
+              padding: 0,                      
+            }}
+            region={{
+              latitude: currentMessage.location.latitude,
+              longitude: currentMessage.location.longitude,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421,
+            }}
+          />
+      );
+    }    
+    return null;
   };
   const renderChat = () =>{
     return <View style={[{backgroundColor: color}, styles.container]}>
       <GiftedChat 
         style={styles.chatContainer}        
         alwaysShowSend={true}
-        renderActions={renderCustomActions} 
-        //renderBubble={renderBubble.bind(this)}
+        renderCustomView={CustomView}
+        renderActions={renderCustomActions}         
         renderBubble={renderBubble}
         renderInputToolbar={props => customtInputToolbar(props)}
         renderAccessory={selectedImage !== "" ? imageAccessory:null}
@@ -315,11 +353,12 @@ export default function ChatScreen(props){
         }}
     />  
     </View>
-  }
+  };
 
   return (    
     <KeyboardAvoider 
-      offset = {44} 
+    //offset keyboard by a different amount depending on platform
+      offset = {Platform.select({ios: 0, android: 44})} 
     >
       {renderChat()} 
     </KeyboardAvoider >
