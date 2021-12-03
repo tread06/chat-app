@@ -18,9 +18,9 @@ export default function ChatScreen(props){
 
   const [name, setName] = useState('');
   const [color, setColor] = useState('');  
-  const [messages, setMessages] = useState([]);    
-  const [user, setUser] = useState("");
-  const [isSending, setIsSending] = useState(false);
+  const [messages, setMessages] = useState([]); 
+  const [user, setUser] = useState(""); 
+  const [isSending, setIsSending] = useState(false); //used to display loading/uploading information
   const [selectedImage, setselectedImage] = useState(""); //path to image file that will be sent 
 
   // called on mount, sets navigation options and stores name in state
@@ -336,7 +336,8 @@ export default function ChatScreen(props){
   const renderChat = () =>{
     return <View style={[{backgroundColor: color}, styles.container]}>
       <GiftedChat 
-        style={styles.chatContainer}        
+        style={styles.chatContainer}     
+        renderUsernameOnMessage={true}   
         alwaysShowSend={true}
         renderCustomView={CustomView}
         renderActions={renderCustomActions}         
