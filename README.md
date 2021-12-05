@@ -1,3 +1,5 @@
+![Chat App](https://github.com/tread06/chat-app/blob/master/chat-app-combined.png?raw=true)
+
 # Chat App
 
 Chat App is a mobile cross-platform chat room app that uses React Native, Expo, the Gifted Chat npm package and Google’s Firebase services.
