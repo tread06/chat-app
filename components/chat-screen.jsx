@@ -356,16 +356,17 @@ export default function ChatScreen(props){
     </View>
   };
 
-  return (    
-    <KeyboardAvoider 
-    //offset keyboard by a different amount depending on platform
-      offset = {Platform.select({ios: 0, android: 44})} 
-    >
-      {renderChat()} 
-    </KeyboardAvoider >
+  return Platform.select({
+    ios: renderChat(), 
+    android: 
+      <KeyboardAvoider           
+      offset = {44} 
+      >
+        {renderChat()}
+      </KeyboardAvoider >      
+    }
   );
 }
-
 const styles = StyleSheet.create({  
   container:{
     flex: 1, 
